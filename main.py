@@ -17,7 +17,7 @@ top = 1000
 orderBy = 'id asc'
 
 
-# Função para dropar colunas desnecessárias caso existam
+# Função para dropar colunas desnecessárias do dataframe caso existam
 def drop_column_if_exists(df, nome_coluna):
     if nome_coluna in df.columns:
         df.drop(nome_coluna, axis=1)
