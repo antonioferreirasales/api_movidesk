@@ -1,4 +1,3 @@
-import psycopg2  # para conectar com o banco de dados
 from sqlalchemy import create_engine
 from configuracoes import*  # importa as variáveis do banco
 

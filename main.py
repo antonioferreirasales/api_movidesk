@@ -1,13 +1,9 @@
 import requests  # biblioteca para realizar requisições à uma API
-import json  # biblioteca para tratar arquivos do tipo 'json'
 import pandas as pd  # biblioteca para tratar os dados
-from psycopg2 import sql  # para conectar com o banco de dados
 from psycopg2.errors import UniqueViolation, IntegrityError
-import sqlalchemy  # para inserir os dados
-from configuracoes import token  # importa o token
 from conexao import *
 import time  # para lidar com timing
-from sqlalchemy import create_engine, func, text
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
 Session = sessionmaker(bind=engine)
@@ -39,6 +35,12 @@ while True:
                   f'$skip={skip}&$top={top}&$orderby={orderBy}'
         respostas = requests.get(api_url, timeout=3)
         if respostas.status_code == 200:
+            # Consulta os id existentes no banco
+            query = text(f"SELECT COUNT(id) FROM tickets")
+            with engine.connect() as conn:
+                resultado = conn.execute(query)
+            # Armazena resultado na variável skip
+            skip = resultado.fetchone()[0]
             print(f'O valor pulado é de {skip}')
             json = respostas.json()
             # normaliza a semi-estrutura do arquivo JSON em uma única tabela
@@ -55,12 +57,6 @@ while True:
                          'urgency': 'urgencia', 'subject': 'assunto', 'category': 'categoria',
                          'createdBy.businessName': 'cliente', 'createdBy.id': 'id_cliente',
                          'owner.businessName': 'analista', 'owner.id': 'id_analista'})
-            # Consulta os id existentes no banco
-            query = text(f"SELECT COUNT(id) FROM tickets")
-            with engine.connect() as conn:
-                resultado = conn.execute(query)
-            # Armazena resultado na variável skip
-            skip = resultado.fetchone()[0]
             # Verifica os id duplicados no dataframe e os remove
             id_existentes = pd.read_sql_query('SELECT id FROM tickets', engine)
             tickets = tickets[~tickets['id'].isin(id_existentes['id'])]
@@ -69,15 +65,13 @@ while True:
             # Fecha a conexão
             engine.dispose()
             session.close()
-            time.sleep(60)  # espera 60 segundos
+            time.sleep(65)  # espera 65 segundos
         else:
             erro = respostas.raise_for_status()
             print(f'Ocorreu o seguinte erro no acesso da API: {erro}')
     except UniqueViolation as e:
         print("Erro de violação de chave única:", e)
-        skip += skip
         continue
     except IntegrityError as e:
         print("Erro de violação de chave única:", e)
-        skip += skip
         continue
