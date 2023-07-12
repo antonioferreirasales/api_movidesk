@@ -7,8 +7,8 @@ Um programa para consumir informações de tickets, pessoas e notas de atendimen
 Use o gerenciador de pacotes [pip](https://pip.pypa.io/en/stable/) para instalar as bibliotecas necessárias.
 
 ```bash
-# instala o panda e o apelida como 'pd'
-pip install pandas as pd
+# instala o pandas
+pip install pandas
 
 # instala o requests para fazer requisições à API
 pip install requests
@@ -16,14 +16,13 @@ pip install requests
 # instala psycopg2 para conectar ao banco de dados PostgreSQL
 pip install psycopg2
 
-# instalar o SQLAlchemy para trabalhar com banco de dados
+# instalar o SQLAlchemy manipular o banco de dados
 pip install SQLAlchemy
-'
 ```
 
 ## Utilização
 
 Configure o arquivo 'config.properties' no diretório da aplicação de acordo com suas credencias e execute o main.py
-## License
+## Licença
 
 [MIT](https://choosealicense.com/licenses/mit/)
