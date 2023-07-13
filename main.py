@@ -1,6 +1,8 @@
 import requests  # biblioteca para realizar requisições à uma API
 import pandas as pd  # biblioteca para tratar os dados
 from psycopg2.errors import UniqueViolation, IntegrityError
+from urllib3.exceptions import ConnectTimeoutError
+
 from conexao import *
 import time  # para lidar com timing
 from sqlalchemy import text
@@ -16,10 +18,11 @@ select = 'id,category,subject,urgency,baseStatus,ownerTeam,lifetimeWorkingTime,c
 filters = "(chatWidget eq  'Unidade - VR Fortaleza')"
 expand = 'owner($select=id,businessName),createdBy($select=id,businessName)'
 skip = 0
-top = 10
+top = 10  # limite de requisições por conexão
 orderBy = 'id asc'
 
 tabela = 'tickets'  # define nome da tabela no banco de dados
+
 
 # Função para dropar colunas desnecessárias do dataframe caso existam
 def drop_column_if_exists(df, nome_coluna):
@@ -65,13 +68,25 @@ while True:
             # Fecha a conexão
             engine.dispose()
             session.close()
-            time.sleep(65)  # espera 65 segundos
+            time.sleep(60)  # espera 60 segundos
         else:
-            erro = respostas.raise_for_status()
-            print(f'Ocorreu o seguinte erro no acesso da API: {erro}')
+            print(f'Ocorreu o seguinte erro no acesso da API: {respostas.raise_for_status()}')
+    # Exceções e tratamentos de erros
+    except ConnectTimeoutError as e:
+        print("Timeout de conexão:", e)
+        print("Tentando novamente em 5 segundos...")
+        time.sleep(5)
+        continue
+    except requests.exceptions.ReadTimeout:
+        print('Timeout de leitura. Tentando novamente em 60 segundos...')
+        time.sleep(60)
+        continue
     except UniqueViolation as e:
-        print("Erro de violação de chave única:", e)
+        print('Erro de violação de chave única:', e)
         continue
     except IntegrityError as e:
-        print("Erro de violação de chave única:", e)
+        print('Erro de violação de integridade:', e)
         continue
+    except KeyboardInterrupt:
+        print('Encerrando programa.')
+        break
